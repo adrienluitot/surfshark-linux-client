@@ -62,7 +62,7 @@ class Main():
         self.main_window = MainWindow(self)
         self.main_window.connect("destroy", self.soft_quit_g)
 
-        if (not self.config['password_needed']):
+        if (not self.config['password_needed'] and self.config['registered']):
             screen = self.main_window.get_display()
             monitor_size = screen.get_monitor_at_window(Gdk.get_default_root_window()).get_geometry()
             self.main_window.move(monitor_size.width / 2 - self.main_window.get_size().width / 2,
