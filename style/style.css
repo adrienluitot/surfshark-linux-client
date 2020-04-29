@@ -1,0 +1,105 @@
+window {
+    color: #444;
+}
+
+window,
+list row,
+notebook stack > * {
+    background-color: #fff;
+}
+
+entry {
+    background-color: Transparent;
+    border-color: #777;
+    color: #444;
+    border-radius: 0;
+    font-size: 14px;
+    transition: all .3s;
+}
+entry:focus {
+    border-color: #1dafc9;
+}
+entry.error {
+    border-color: #F75C4C;
+    background-color: unset;
+    color: unset;
+}
+
+button {
+    border-radius: 0;
+    font-size: 15px;
+    min-height: 35px;
+    min-width: 70px;
+    transition: all .3s;
+    background: #bccad9;
+    color: #333;
+    border: none;
+}
+button:hover {
+    background: #9caab9;
+}
+*:disabled {
+    color: #7c8a99;
+}
+
+label.label {
+    font-size: 16px;
+}
+
+label.or-label {
+    font-size: 21px;
+    font-weight: bold;
+}
+
+.connection-info label {
+    font-size: 14px;
+    min-height: 22px;
+}
+
+notebook tabs {
+    border-bottom: 1px solid #505050;
+}
+notebook tab {
+    font-size: 16px;
+    font-weight: 600;
+    background: #c5d3e2;
+    min-height: 35px;
+    color: #4c4c4c;
+    border: none;
+}
+notebook tab:checked {
+    border:none;
+}
+notebook tab:checked {
+    background: #63d5e9;
+    color: #3a3a3a;
+}
+
+list row {
+    font-size: 14px;
+    min-height: 28px;
+}
+list row:selected,
+list row:focus {
+    color: #252525;
+    background: #eee;
+    font-weight: bold;
+}
+list row:selected *,
+list row:focus * {
+    color: #252525;
+}
+
+switch,
+switch slider {
+    transition: all .3s;
+}
+
+.warn {
+    color: #D73C2C;
+}
+
+.title {
+    font-size: 17px;
+    font-weight: 500;
+}
