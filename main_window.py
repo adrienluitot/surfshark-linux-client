@@ -11,7 +11,7 @@ class MainWindow(Gtk.Window):
         Gtk.Window.__init__(self, title="SurfShark Client - App")
         self.set_default_size(510, 720)
         self.set_resizable(False)
-        self.set_icon_from_file("surfshark_linux_client.png")
+        self.set_icon_from_file(main.folder_path + "surfshark_linux_client.png")
 
         self.main = main
 
@@ -48,14 +48,14 @@ class MainWindow(Gtk.Window):
             image = Gtk.Image()
 
             flag_array = server['flagUrl'].split('/')
-            if (not os.path.isfile('flags/' + flag_array[len(flag_array) - 1])):
+            if (not os.path.isfile(main.folder_path + 'flags/' + flag_array[len(flag_array) - 1])):
                 opener = urllib.request.build_opener()
                 opener.addheaders = [
                     ('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:73.0) Gecko/20100101 Firefox/73.0')]
                 urllib.request.install_opener(opener)
-                urllib.request.urlretrieve(server['flagUrl'], "flags/" + flag_array[len(flag_array) - 1])
+                urllib.request.urlretrieve(server['flagUrl'], main.folder_path + "flags/" + flag_array[len(flag_array) - 1])
 
-            image.set_from_file('flags/' + flag_array[len(flag_array) - 1])
+            image.set_from_file(main.folder_path + 'flags/' + flag_array[len(flag_array) - 1])
             vpn_server.pack_start(image, False, False, 10)
 
             city = Gtk.Label(server['country'] + ', ' + server['location'])

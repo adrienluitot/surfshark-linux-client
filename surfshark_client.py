@@ -36,17 +36,20 @@ class Main():
         # TODO : Make a loader
         # TODO : Find a way to have a popup to run the app as root
 
+        self.folder_path = os.path.abspath(os.path.dirname(__file__)) + "/"
+
+
         self.servers = self.get_servers()
         self.unhash_pass = ""
         self.config_files = {}
         self.vpn_command = False
         self.thread = False
         self.ip = ""
-        with open("config.json", "r") as file:
+        with open(self.folder_path + "config.json", "r") as file:
             self.config = json.load(file)
 
         style = Gtk.CssProvider()
-        style.load_from_path("style/style.css")
+        style.load_from_path(self.folder_path + "style/style.css")
 
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
@@ -137,7 +140,7 @@ class Main():
         self.debug("Logged In")
 
     def save_config(self):
-        with open("config.json", "w") as file:
+        with open(self.folder_path + "config.json", "w") as file:
             file.write(json.dumps(self.config))
             self.debug("Config saved")
 
@@ -267,17 +270,17 @@ class Main():
             self.thread.join()
             self.main_window.ip_label.set_label("")
 
-        with open('.tmp_creds_file', 'a+') as cred_file:
+        with open(self.folder_path + '.tmp_creds_file', 'a+') as cred_file:
             if (self.config['password_needed']):
                 cred_file.write(self.sym_decrypt(self.config['vpn_username']) + "\n" + self.sym_decrypt(self.config['vpn_password']))
             else:
                 cred_file.write(self.config['vpn_username'] + "\n" + self.config['vpn_password'])
 
-        subprocess.call(["cp", "vpn_config_files/" + openvpn_config_file, ".tmp_cfg_file"])
+        subprocess.call(["cp", self.folder_path + "vpn_config_files/" + openvpn_config_file, self.folder_path + ".tmp_cfg_file"])
 
         try:
             i = 0
-            with open('.tmp_cfg_file', 'r+') as cfg_file:
+            with open(self.folder_path + '.tmp_cfg_file', 'r+') as cfg_file:
                 file = cfg_file.readlines()
                 for line in file:
                     if ("auth-user-pass" in line): break
@@ -291,19 +294,19 @@ class Main():
 
             return False
 
-        with open('.tmp_cfg_file', 'w') as cfg_file:
-            file[i] = "auth-user-pass .tmp_creds_file"
+        with open(self.folder_path + '.tmp_cfg_file', 'w') as cfg_file:
+            file[i] = "auth-user-pass "+ self.folder_path +".tmp_creds_file"
             cfg_file.writelines(file)
 
-        self.vpn_command = subprocess.Popen(["openvpn", ".tmp_cfg_file"], stdout=subprocess.PIPE)
+        self.vpn_command = subprocess.Popen(["openvpn", self.folder_path + ".tmp_cfg_file"], stdout=subprocess.PIPE)
 
         self.thread = threading.Thread(target=self.command_log)
         self.thread.start()
 
     def command_log(self):
         time.sleep(.1)
-        subprocess.call(["rm", ".tmp_cfg_file"])
-        subprocess.call(["rm", ".tmp_creds_file"])
+        subprocess.call(["rm", self.folder_path + ".tmp_cfg_file"])
+        subprocess.call(["rm", self.folder_path + ".tmp_creds_file"])
 
         for line in iter(self.vpn_command.stdout.readline, b''):
             line = line.decode()[:-1]
@@ -322,7 +325,7 @@ class Main():
                 self.ip = ip.decode()
                 self.main_window.confirm_connection()
 
-            with open("logs/openvpn-logs-" + str(date.today()) + ".txt", 'a') as logfile:
+            with open(self.folder_path + "logs/openvpn-logs-" + str(date.today()) + ".txt", 'a') as logfile:
                 logfile.write(line + "\n")
 
     def disconnect(self, button):
@@ -336,22 +339,22 @@ class Main():
         self.main_window.disconnect_btn.set_sensitive(False)
         self.main_window.switch_server_btn.set_sensitive(True)
 
-    def check_updates(self):
-        subprocess.call(["wget", "https://account.surfshark.com/api/v1/server/configurations", "-O", "vpn_config_files/conf.zip"])
-        p = subprocess.Popen(["md5sum", "vpn_config_files/conf.zip"], stdout=subprocess.PIPE)
+    def check_updates(self, button):
+        subprocess.call(["wget", "https://account.surfshark.com/api/v1/server/configurations", "-O", self.folder_path + "vpn_config_files/conf.zip"])
+        p = subprocess.Popen(["md5sum", self.folder_path + "vpn_config_files/conf.zip"], stdout=subprocess.PIPE)
         checksum, err = p.communicate()
         checksum = checksum.decode().split("  ")[0]
 
         if(checksum != self.config['config_md5']):
-            subprocess.call("rm vpn_config_files/*.ovpn", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.call(["unzip", "vpn_config_files/conf.zip", "-d", "vpn_config_files"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.call("rm " + self.folder_path + "vpn_config_files/*.ovpn", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.call(["unzip", self.folder_path + "vpn_config_files/conf.zip", "-d", self.folder_path + "vpn_config_files"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             self.config['config_md5'] = checksum
             self.save_config()
             self.main_window.updates_info.set_label("The config files were updated !")
         else:
             self.main_window.updates_info.set_label("Everything is okay !")
 
-        subprocess.call(["rm", "vpn_config_files/conf.zip"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.call(["rm", self.folder_path + "vpn_config_files/conf.zip"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
     def soft_quit(self):

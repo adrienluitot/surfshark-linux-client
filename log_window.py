@@ -11,7 +11,7 @@ class LogWindow(Gtk.Window):
         self.set_default_size(510, 720)
         self.set_resizable(False)
         self.move(400, 200)
-        self.set_icon_from_file("surfshark_linux_client.png")
+        self.set_icon_from_file(main.folder_path + "surfshark_linux_client.png")
 
         self.log_container = Gtk.VBox()
         self.add(self.log_container)

@@ -1,3 +1,9 @@
+# SurfShark Linux Client
+logs/*
+.tmp_creds_file
+.tmp_cfg_file
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
