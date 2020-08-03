@@ -24,34 +24,32 @@ class LogWindow(Gtk.Window):
 
         self.vbox.pack_start(Gtk.Label(), True, True, 0)
 
+        self.username_label = Gtk.Label()
+        self.username_label.set_markup("OpenVPN Username")
+        self.username_label.get_style_context().add_class('label')
+        self.vbox.pack_start(self.username_label, False, False, 3)
+
+        self.username = Gtk.Entry()
+        self.username.set_placeholder_text("Username")
+        self.username.connect("activate", main.log_action)
+        self.username.set_visibility(True)
+        self.vbox.pack_start(self.username, False, False, 10)
+
+
         self.password_label = Gtk.Label()
-        self.password_label.set_markup("Password")
+        self.password_label.set_markup("OpenVPN Password")
         self.password_label.get_style_context().add_class('label')
-        self.vbox.pack_start(self.password_label, False, False, 0)
+        self.vbox.pack_start(self.password_label, False, False, 3)
 
         self.password = Gtk.Entry()
         self.password.set_placeholder_text("Password")
         self.password.connect("activate", main.log_action)
-        self.password.set_visibility(False)
-        self.vbox.pack_start(self.password, False, False, 0)
-
-        if not main.config['registered']:
-            self.vbox.pack_start(Gtk.Label(), False, False, 0)
-
-            self.confirm_password_label = Gtk.Label()
-            self.confirm_password_label.set_markup("Confirm Password")
-            self.confirm_password_label.get_style_context().add_class('label')
-            self.vbox.pack_start(self.confirm_password_label, False, False, 0)
-
-            self.confirm_password = Gtk.Entry()
-            self.confirm_password.set_placeholder_text("Confirm Password")
-            self.confirm_password.connect("activate", main.log_action)
-            self.confirm_password.set_visibility(False)
-            self.vbox.pack_start(self.confirm_password, False, False, 0)
+        self.password.set_visibility(True)
+        self.vbox.pack_start(self.password, False, False, 5)
 
         button_container = Gtk.HBox()
         button_container.pack_start(Gtk.Label(), True, True, 0)
-        log_button_text = "Log in" if main.config['registered'] else "Register"
+        log_button_text = "Log in"
         self.log_button = Gtk.Button(label=log_button_text)
         self.log_button.connect("clicked", main.log_action)
         self.log_button.connect("enter-notify-event", self.hover)
@@ -59,17 +57,6 @@ class LogWindow(Gtk.Window):
         button_container.pack_start(self.log_button, False, False, 0)
         button_container.pack_start(Gtk.Label(), True, True, 0)
         self.vbox.pack_start(button_container, False, False, 30)
-
-        if(not main.config['registered']):
-            or_label = Gtk.Label('OR')
-            or_label.get_style_context().add_class('or-label')
-            self.vbox.pack_start(or_label, False, False, 20)
-
-            self.log_without_pass_button = Gtk.Button(label="Don't use password")
-            self.log_without_pass_button.connect("clicked", main.log_action)
-            self.log_without_pass_button.connect("enter-notify-event", self.hover)
-            self.log_without_pass_button.connect("leave-notify-event", self.not_hover)
-            self.vbox.pack_start(self.log_without_pass_button, False, False, 30)
 
         self.vbox.pack_start(Gtk.Label(), True, True, 0)
 
