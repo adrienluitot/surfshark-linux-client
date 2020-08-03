@@ -294,6 +294,7 @@ class Main():
         if self.vpn_command and self.thread:
             self.vpn_command.terminate()
             self.thread.join()
+        self.disable_killswitch()    
         Gtk.main_quit()
 
     def soft_quit_g(self, window):
