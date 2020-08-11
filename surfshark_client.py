@@ -12,8 +12,6 @@ import threading
 import time
 import os
 import keyring
-import pyufw as ufw
-
 from datetime import date
 
 from Crypto.Cipher import AES
@@ -23,7 +21,6 @@ from Crypto.Util.Padding import pad, unpad
 from log_window import LogWindow
 from main_window import MainWindow
 from popup import Popup
-
 
 class Main():
     def __init__(self):
@@ -178,11 +175,15 @@ class Main():
             self.config["killswitch"] = "on"
             self.main_window.killswitch_off_label.set_markup("OFF")
             self.main_window.killswitch_on_label.set_markup("<b>ON</b>")
+            if(self.vpn_command):
+                self.enable_killswitch()
+            success_popup = Popup("Killswitch activated", "The killswitch is now activated!\nThe current version of the killswitch can leak on port 1194")
         else:
             self.config["killswitch"] = "off"
             self.main_window.killswitch_off_label.set_markup("<b>OFF</b>")
             self.main_window.killswitch_on_label.set_markup("ON")       
             self.disable_killswitch()         
+            success_popup = Popup("Killswitch deactivated", "The killswitch is now inactive!\nYour network traffic is now possible to leak")
         self.save_config()
 
     def credential_updated(self):
@@ -228,6 +229,10 @@ class Main():
             file[i] = "auth-user-pass "+ self.folder_path +".tmp_creds_file"
             cfg_file.writelines(file)
 
+        #disable the killswitch to connect to a new server
+        if(self.config["killswitch"] == "on"):
+            self.disable_killswitch()
+        
         self.vpn_command = subprocess.Popen(["openvpn", self.folder_path + ".tmp_cfg_file"], stdout=subprocess.PIPE)
 
         self.thread = threading.Thread(target=self.command_log)
@@ -264,13 +269,14 @@ class Main():
         self.debug('DISCONNECTED')
         self.vpn_command.terminate()
         self.thread.join()
+        self.disable_killswitch()
 
         self.ip = ""
         self.main_window.connected_to_label.set_label("Disconnected")
         self.main_window.ip_label.set_label("")
         self.main_window.disconnect_btn.set_sensitive(False)
         self.main_window.switch_server_btn.set_sensitive(True)
-        self.disable_killswitch()
+
 
     def check_updates(self, button):
         subprocess.call(["wget", "https://account.surfshark.com/api/v1/server/configurations", "-O", self.folder_path + "vpn_config_files/conf.zip"])
@@ -294,21 +300,28 @@ class Main():
         if self.vpn_command and self.thread:
             self.vpn_command.terminate()
             self.thread.join()
-        self.disable_killswitch()    
+        self.disable_killswitch()
+        self.create_tray()
         Gtk.main_quit()
 
     def soft_quit_g(self, window):
         self.soft_quit()
 
     def enable_killswitch(self):
-        ufw.reset()
-        ufw.default(incoming='deny', outgoing='deny', routed='reject')
-        ufw.add("allow out on tun0 from any to any")
-        ufw.enable()
-        
+        #enable killswitch
+        enable_killswitch_command = "sudo ./enablekillswitch.sh"
+
+        command = enable_killswitch_command.split()
+        subprocess.run(command)
+
     def disable_killswitch(self):
-        ufw.reset()
-        ufw.default(incoming='deny', outgoing='allow')
-        ufw.enable()
+        #restore old iptable rules
+        restore_iptables_command= "sudo ./restoreiptables.sh"
+        command = restore_iptables_command.split()
+        subprocess.run(command)
+
+    def create_tray(self):
+        #TODO
+        pass
 
 Main()

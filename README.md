@@ -22,6 +22,17 @@ If you never used PyGObject I suggest you these two docs :
 - [https://pygobject.readthedocs.io](https://pygobject.readthedocs.io/en/latest/index.html)
 - [https://python-gtk-3-tutorial.readthedocs.io](https://python-gtk-3-tutorial.readthedocs.io/en/latest/)
 
+## Problems with the Killswitch
+
+If you get any problems with the killswitch and can't connect to the internet anymore you have three options
+
+    1. You can use the restoreiptables.sh script which will try to restore a backup of your iptable rules 
+    2. You can use the disableKillSwitch.sh which will reset ufw to its initial state(the best method when you haven't added custom firewall rules)
+    3. You can try to fix it yourself
+    
+If you switch the server while the killswitch is turned on your real ip address might leak!
+The Killswitch will stop working when you close the Window!
+
 ## Screenshots 
 |                 First open window                 |                Login window                 |
 | :-----------------------------------------------: | :-----------------------------------------: |
