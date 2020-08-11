@@ -36,10 +36,14 @@ The Killswitch will stop working when you close the Window!
 ## Screenshots 
 |                 First open window                 |                Login window                 |
 | :-----------------------------------------------: | :-----------------------------------------: |
-| ![Register](http://i.luitot.fr/sslc_register.png) | ![Login](http://i.luitot.fr/sslc_login.png) |
+| ![Register](https://i.luitot.fr/sslc_register.png) | ![Login](https://i.luitot.fr/sslc_login.png) |
 
 
 
 |                Main window                |                  Settings window                  |
 | :---------------------------------------: | :-----------------------------------------------: |
-| ![Main](http://i.luitot.fr/sslc_main.png) | ![Settings](http://i.luitot.fr/sslc_settings.jpg) |
+| ![Main](https://i.luitot.fr/sslc_main.png)| ![Settings](https://i.luitot.fr/sslc_settings.jpg) |
+
+|            Main window (Dark)             |               Settings window (Dark)               |
+| :---------------------------------------: | :-----------------------------------------------:  |
+| ![Main](https://jonahstrotmann.me/assets/img/resources/home_dark.png)| ![Settings](https://jonahstrotmann.me/assets/img/resources/settings_dark.png) |
