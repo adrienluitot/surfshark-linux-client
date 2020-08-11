@@ -34,12 +34,6 @@ If you switch the server while the killswitch is turned on your real ip address 
 The Killswitch will stop working when you close the Window!
 
 ## Screenshots 
-|                 First open window                 |                Login window                 |
-| :-----------------------------------------------: | :-----------------------------------------: |
-| ![Register](https://i.luitot.fr/sslc_register.png) | ![Login](https://i.luitot.fr/sslc_login.png) |
-
-
-
 |                Main window                |                  Settings window                  |
 | :---------------------------------------: | :-----------------------------------------------: |
 | ![Main](https://i.luitot.fr/sslc_main.png)| ![Settings](https://i.luitot.fr/sslc_settings.jpg) |
