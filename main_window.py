@@ -133,21 +133,21 @@ class MainWindow(Gtk.Window):
         vpn_settings_container.pack_start(credentials_v_container, False, False, 15)
 
         self.username_label = Gtk.Label()
-        self.username_label.set_markup("VPN Username")
+        self.username_label.set_markup("OpenVPN Username")
         credentials_v_container.pack_start(self.username_label, False, False, 10)
 
         self.credentials_username = Gtk.Entry()
-        self.credentials_username.set_placeholder_text("VPN Username")
+        self.credentials_username.set_placeholder_text("OpenVPN Username")
         credentials_v_container.pack_start(self.credentials_username, False, False, 0)
 
         credentials_v_container.pack_start(Gtk.Label(), False, False, 0)
 
         self.password_label = Gtk.Label()
-        self.password_label.set_markup("VPN Password")
+        self.password_label.set_markup("OpenVPN Password")
         credentials_v_container.pack_start(self.password_label, False, False, 10)
 
         self.credentials_password = Gtk.Entry()
-        self.credentials_password.set_placeholder_text("VPN Password")
+        self.credentials_password.set_placeholder_text("OpenVPN Password")
         credentials_v_container.pack_start(self.credentials_password, False, False, 0)
 
         self.save_credentials_button = Gtk.Button(label="Save")
