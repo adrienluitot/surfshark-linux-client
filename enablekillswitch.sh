@@ -58,7 +58,7 @@ ip6tables -t raw -X
 #deny everything by default
 ip6tables -P INPUT DROP
 ip6tables -P FORWARD DROP
-ip6tables -P OUTPUT ACCEPT
+ip6tables -P OUTPUT DROP
 
 #allow loopback device
 ip6tables -A INPUT -i lo -j ACCEPT
