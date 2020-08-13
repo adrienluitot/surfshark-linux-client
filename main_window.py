@@ -161,54 +161,6 @@ class MainWindow(Gtk.Window):
 
         vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
 
-        protocol_container = Gtk.HBox()
-        protocol_container.pack_start(Gtk.Label(), True, False, 0)
-
-        is_tcp = True if main.config["connection_protocol"] == "tcp" else False
-        self.udp_label = Gtk.Label()
-        self.udp_label.set_markup("UDP" if is_tcp else "<b>UDP</b>")
-        protocol_container.pack_start(self.udp_label, False, False, 0)
-
-        self.protocol_switch = Gtk.Switch()
-        self.protocol_switch.set_active(is_tcp)
-        self.protocol_switch.connect("state-set", self.main.change_protocol)
-        self.protocol_switch.connect("enter-notify-event", self.hover)
-        self.protocol_switch.connect("leave-notify-event", self.not_hover)
-        protocol_container.pack_start(self.protocol_switch, False, False, 20)
-
-        self.tcp_label = Gtk.Label()
-        self.tcp_label.set_markup("<b>TCP</b>" if is_tcp else "TCP")
-        protocol_container.pack_start(self.tcp_label, False, False, 0)
-
-        vpn_settings_container.pack_start(protocol_container, False, False, 15)
-        protocol_container.pack_start(Gtk.Label(), True, False, 0)
-
-        vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
-
-        self.enable_password_container = Gtk.VBox()
-        if(not self.main.config['password_needed']):
-            self.enable_password_container.set_sensitive(False)
-        vpn_settings_container.pack_start(self.enable_password_container, False, False, 3)
-
-        disable_pass_label = Gtk.Label("Disable/Enable the password")
-        self.enable_password_container.pack_start(disable_pass_label, False, False, 3)
-
-        self.disable_pass_button = Gtk.Button()
-        self.disable_pass_button.set_label("Disable Pass" if self.main.config['password_needed'] else "Enable Pass")
-        self.disable_pass_button.connect("clicked", self.main.change_password_need)
-        self.disable_pass_button.connect("enter-notify-event", self.hover)
-        self.disable_pass_button.connect("leave-notify-event", self.not_hover)
-        self.enable_password_container.pack_start(self.disable_pass_button, False, False, 20)
-
-        disable_pass_warn_label = Gtk.Label()
-        disable_pass_warn_label.set_markup("<small>Disabling your password will display it uncrypted in the config.json!</small>")
-        disable_pass_warn_label.get_style_context().add_class('warn')
-        self.enable_password_container.pack_start(disable_pass_warn_label, False, False, 3)
-
-        vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
-
-        self.updates_info = Gtk.Label()
-        vpn_settings_container.pack_start(self.updates_info, False, False, 0)
 
         self.check_for_updates_btn = Gtk.Button("Check for VPN updates")
         self.check_for_updates_btn.connect("clicked", self.main.check_updates)
@@ -218,45 +170,6 @@ class MainWindow(Gtk.Window):
 
         vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
 
-        update_pass_label = Gtk.Label('Change your password')
-        update_pass_label.get_style_context().add_class('title')
-        vpn_settings_container.pack_start(update_pass_label, False, False, 5)
-
-        vpn_settings_container.pack_start(Gtk.Label(), False, False, 0)
-
-        self.new_password_label = Gtk.Label()
-        self.new_password_label.set_markup("New Password")
-        self.new_password_label.get_style_context().add_class('label')
-        vpn_settings_container.pack_start(self.new_password_label, False, False, 0)
-
-        self.new_password = Gtk.Entry()
-        self.new_password.set_placeholder_text("New Password")
-        self.new_password.set_visibility(False)
-        vpn_settings_container.pack_start(self.new_password, False, False, 0)
-
-        vpn_settings_container.pack_start(Gtk.Label(), False, False, 0)
-
-        self.confirm_new_password_label = Gtk.Label()
-        self.confirm_new_password_label.set_markup("Confirm New Password")
-        self.confirm_new_password_label.get_style_context().add_class('label')
-        vpn_settings_container.pack_start(self.confirm_new_password_label, False, False, 0)
-
-        self.confirm_new_password = Gtk.Entry()
-        self.confirm_new_password.set_placeholder_text("Confirm New Password")
-        self.confirm_new_password.set_visibility(False)
-        vpn_settings_container.pack_start(self.confirm_new_password, False, False, 0)
-
-        self.update_password = Gtk.Button("Update password")
-        self.update_password.connect("clicked", self.main.update_password)
-        self.update_password.connect("enter-notify-event", self.hover)
-        self.update_password.connect("leave-notify-event", self.not_hover)
-        vpn_settings_container.pack_start(self.update_password, False, False, 10)
-
-        self.updated_password_label = Gtk.Label()
-        vpn_settings_container.pack_start(self.updated_password_label, False, False, 5)
-
-        vpn_settings_container.pack_start(Gtk.Label(), False, False, 13)
-        
         #Theme
         theme_container = Gtk.HBox()
         theme_label = Gtk.Label("Theme")
@@ -337,6 +250,32 @@ class MainWindow(Gtk.Window):
 
         self.updates_info = Gtk.Label()
         vpn_settings_container.pack_start(self.updates_info, False, False, 0)
+
+        self.enable_password_container = Gtk.VBox()
+        if(not self.main.config['password_needed']):
+            self.enable_password_container.set_sensitive(False)
+        vpn_settings_container.pack_start(self.enable_password_container, False, False, 3)
+
+        disable_pass_label = Gtk.Label("Disable/Enable the password")
+        self.enable_password_container.pack_start(disable_pass_label, False, False, 3)
+
+        self.disable_pass_button = Gtk.Button()
+        self.disable_pass_button.set_label("Disable Pass" if self.main.config['password_needed'] else "Enable Pass")
+        self.disable_pass_button.connect("clicked", self.main.change_password_need)
+        self.disable_pass_button.connect("enter-notify-event", self.hover)
+        self.disable_pass_button.connect("leave-notify-event", self.not_hover)
+        self.enable_password_container.pack_start(self.disable_pass_button, False, False, 20)
+
+        disable_pass_warn_label = Gtk.Label()
+        disable_pass_warn_label.set_markup("<small>Disabling your password will display it uncrypted in the config.json!</small>")
+        disable_pass_warn_label.get_style_context().add_class('warn')
+        self.enable_password_container.pack_start(disable_pass_warn_label, False, False, 3)
+
+        vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
+
+        self.updates_info = Gtk.Label()
+        vpn_settings_container.pack_start(self.updates_info, False, False, 0)
+
 
         self.check_for_updates_btn = Gtk.Button("Check for VPN updates")
         self.check_for_updates_btn.connect("clicked", self.main.check_updates)

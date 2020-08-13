@@ -321,8 +321,10 @@ class Main():
             self.main_window.ip_label.set_label("")
 
         with open(self.folder_path + '.tmp_creds_file', 'a+') as cred_file:
-            cred_file.write(str(keyring.get_password("SurfShark", "openvpn_username")) + "\n" + str(keyring.get_password("SurfShark", "openvpn_password")))
-
+            if (self.config['password_needed']):
+                cred_file.write(self.sym_decrypt(self.config['vpn_username']) + "\n" + self.sym_decrypt(self.config['vpn_password']))
+            else:
+                cred_file.write(self.config['vpn_username'] + "\n" + self.config['vpn_password'])
         subprocess.call(["cp", self.folder_path + "vpn_config_files/" + openvpn_config_file, self.folder_path + ".tmp_cfg_file"])
 
         try:
