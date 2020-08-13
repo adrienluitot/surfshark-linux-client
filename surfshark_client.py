@@ -11,7 +11,6 @@ import subprocess
 import threading
 import time
 import os
-import keyring
 from datetime import date
 
 from Crypto.Cipher import AES
@@ -40,6 +39,7 @@ class Main():
 
 
         self.servers = self.get_servers()
+        self.unhash_pass = ""
         self.config_files = {}
         self.vpn_command = False
         self.thread = False
@@ -61,7 +61,7 @@ class Main():
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
-        if not self.config['registered']:
+        if (self.config['password_needed'] or not self.config['registered']):
             self.log_window = LogWindow(self)
             self.log_window.connect("destroy", Gtk.main_quit)
             self.log_window.show_all()
@@ -69,13 +69,13 @@ class Main():
         self.main_window = MainWindow(self)
         self.main_window.connect("destroy", self.soft_quit_g)
 
-        if (self.config['registered']):
+        if (not self.config['password_needed'] and self.config['registered']):
             screen = self.main_window.get_display()
             monitor_size = screen.get_monitor_at_window(Gdk.get_default_root_window()).get_geometry()
             self.main_window.move(monitor_size.width / 2 - self.main_window.get_size().width / 2,
                                   monitor_size.height / 2 - self.main_window.get_size().height / 2)
-            self.main_window.credentials_username.set_text(str(keyring.get_password("SurfShark", "openvpn_username")))
-            self.main_window.credentials_password.set_text(str(keyring.get_password("SurfShark", "openvpn_password")))
+            self.main_window.credentials_username.set_text(self.config['vpn_username'])
+            self.main_window.credentials_password.set_text(self.config['vpn_password'])
             self.main_window.show_all()
 
         try:
@@ -84,25 +84,62 @@ class Main():
             self.soft_quit()
 
     def log_action(self, widget):
-        self.config['registered'] = True
-        keyring.set_password("SurfShark", "openvpn_username", self.log_window.username.get_text())
-        keyring.set_password("SurfShark", "openvpn_password", str(self.log_window.password.get_text()))
-        self.debug("registered")
-        self.save_config()
-        self.log_in()
+        hashed_password = self.hash_pass(self.log_window.password.get_text())
+        if self.config['registered']:
+            if (hashed_password == self.config['password']):
+                self.log_in()
+            else:
+                self.log_window.password.get_style_context().add_class('error')
+                self.debug("Wrong password")
+        else:
+            if (widget == self.log_window.log_without_pass_button):
+                self.config['registered'] = True
+                self.config['password_needed'] = False
+
+                self.save_config()
+                self.log_in()
+            else:
+                if (self.log_window.password.get_text() == self.log_window.confirm_password.get_text()):
+                    self.config['registered'] = True
+                    self.config['password_needed'] = True
+                    self.config['password'] = hashed_password
+
+                    self.save_config()
+                    self.debug("Account created")
+
+                    self.log_in()
+                else:
+                    self.log_window.password.get_style_context().add_class('error')
+                    self.log_window.confirm_password.get_style_context().add_class('error')
 
     def get_servers(self):
         with urllib.request.urlopen("https://api.surfshark.com/v3/server/clusters/all") as url:
             return json.loads(url.read().decode())
 
     def log_in(self):
+        if(self.config['password_needed']):
+            self.unhash_pass = self.log_window.password.get_text()
+
         old_pos = self.log_window.get_position()
         self.log_window.hide()
         self.main_window.move(old_pos.root_x, old_pos.root_y)
         self.main_window.show_all()
-        
-        self.main_window.credentials_username.set_text(str(keyring.get_password("SurfShark", "openvpn_username")))
-        self.main_window.credentials_password.set_text(str(keyring.get_password("SurfShark", "openvpn_password")))
+
+        if ('vpn_password' in self.config and 'vpn_username' in self.config and self.config['vpn_username'] != "" and
+                self.config['vpn_password'] != ""):
+            if (self.config['password_needed']):
+                try:
+                    vpn_username = self.sym_decrypt(self.config['vpn_username'])
+                    vpn_password = self.sym_decrypt(self.config['vpn_password'])
+                except:
+                    vpn_username = ""
+                    vpn_password = ""
+            else:
+                vpn_username = self.config['vpn_username']
+                vpn_password = self.config['vpn_password']
+            self.main_window.credentials_username.set_text(vpn_username)
+            self.main_window.credentials_password.set_text(vpn_password)
+
 
         self.debug("Logged In")
 
@@ -129,12 +166,34 @@ class Main():
         if (error_count > 0): return
 
 
-        keyring.set_password("SurfShark", "vpn_username", vpn_username)
-        keyring.set_password("SurfShark", "vpn_password", vpn_password)
+        if (self.config['password_needed']):
+            vpn_username = self.sym_encrypt(vpn_username)
+            vpn_password = self.sym_encrypt(vpn_password)
+
+        self.config['vpn_username'] = vpn_username
+        self.config['vpn_password'] = vpn_password
+        self.save_config()
         
         creds_updated = threading.Thread(target=self.credential_updated)
         creds_updated.start()
 
+
+    def sym_encrypt(self, raw):
+        private_key = hashlib.sha256(self.unhash_pass.encode("utf-8")).digest()
+        raw = pad(raw.encode('utf-8'), AES.block_size)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(private_key, AES.MODE_CBC, iv)
+        return base64.b64encode(iv + cipher.encrypt(raw)).decode('utf8')
+
+    def sym_decrypt(self, encrypted_text):
+        private_key = hashlib.sha256(self.unhash_pass.encode("utf-8")).digest()
+        encrypted_text = base64.b64decode(encrypted_text)
+        iv = encrypted_text[:16]
+        cipher = AES.new(private_key, AES.MODE_CBC, iv)
+        return unpad(cipher.decrypt(encrypted_text[16:]), AES.block_size).decode('utf8')
+
+    def hash_pass(self, password):
+        return base64.b64encode(hashlib.sha3_512(password.encode("utf-8")).hexdigest().encode()).decode()
 
     def change_protocol(self, switch, is_tcp):
         if (is_tcp):
@@ -146,6 +205,63 @@ class Main():
             self.main_window.udp_label.set_markup("<b>UDP</b>")
             self.main_window.tcp_label.set_markup("TCP")
         self.save_config()
+
+
+    def change_password_need(self, button):
+        button.set_sensitive(False)
+        if(self.config['password_needed']):
+            self.config['password_needed'] = False
+            self.config['vpn_username'] = self.sym_decrypt(self.config['vpn_username'])
+            self.config['vpn_password'] = self.sym_decrypt(self.config['vpn_password'])
+            button.set_label("Enable Pass")
+        else:
+            self.config['password_needed'] = True
+            self.config['vpn_username'] = self.sym_encrypt(self.config['vpn_username'])
+            self.config['vpn_password'] = self.sym_encrypt(self.config['vpn_password'])
+            button.set_label("Disable Pass")
+
+        self.save_config()
+        button.set_sensitive(True)
+
+    def update_password(self, button):
+        self.main_window.new_password.get_style_context().remove_class("error")
+        self.main_window.confirm_new_password.get_style_context().remove_class("error")
+
+        if(self.main_window.new_password.get_text() == self.main_window.confirm_new_password.get_text()):
+            self.config['password'] = self.hash_pass(self.main_window.new_password.get_text())
+            if(self.config['password_needed']):
+                vpn_user = self.sym_decrypt(self.config['vpn_username'])
+                vpn_pass = self.sym_decrypt(self.config['vpn_password'])
+            else:
+                vpn_user = self.config['vpn_username']
+                vpn_pass = self.config['vpn_password']
+                self.config['password_needed'] = True
+                self.main_window.disable_pass_button.set_label("Disable Pass")
+                self.main_window.enable_password_container.set_sensitive(True)
+
+            self.unhash_pass = self.main_window.new_password.get_text()
+            self.config['vpn_username'] = self.sym_encrypt(vpn_user)
+            self.config['vpn_password'] = self.sym_encrypt(vpn_pass)
+            self.main_window.new_password.set_text("")
+            self.main_window.confirm_new_password.set_text("")
+
+            self.save_config()
+
+            password_updated_t = threading.Thread(target=self.password_updated)
+            password_updated_t.start()
+        else:
+            self.main_window.new_password.get_style_context().add_class("error")
+            self.main_window.confirm_new_password.get_style_context().add_class("error")
+
+    def password_updated(self):
+        self.main_window.updated_password_label.set_label("Password updated")
+        time.sleep(2)
+        self.main_window.updated_password_label.set_label("")
+
+    def credential_updated(self):
+        self.main_window.updated_vpn_credential_label.set_label("Credentials updated")
+        time.sleep(2)
+        self.main_window.updated_vpn_credential_label.set_label("")
 
     def change_theme(self, switch, current_theme):
         style = Gtk.CssProvider()
