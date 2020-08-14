@@ -21,7 +21,6 @@ from log_window import LogWindow
 from main_window import MainWindow
 from popup import Popup
 
-
 class Main():
     def __init__(self):
         if os.geteuid() != 0:
@@ -45,11 +44,16 @@ class Main():
         self.vpn_command = False
         self.thread = False
         self.ip = ""
+
         with open(self.folder_path + "config.json", "r") as file:
             self.config = json.load(file)
 
         style = Gtk.CssProvider()
-        style.load_from_path(self.folder_path + "style/style.css")
+        #Theme
+        if(self.config['theme'] == 'light'):
+            style.load_from_path(self.folder_path + "style/style_lightmode.css")
+        else:
+            style.load_from_path(self.folder_path + "style/style_darkmode.css")
 
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
@@ -70,7 +74,6 @@ class Main():
             monitor_size = screen.get_monitor_at_window(Gdk.get_default_root_window()).get_geometry()
             self.main_window.move(monitor_size.width / 2 - self.main_window.get_size().width / 2,
                                   monitor_size.height / 2 - self.main_window.get_size().height / 2)
-
             self.main_window.credentials_username.set_text(self.config['vpn_username'])
             self.main_window.credentials_password.set_text(self.config['vpn_password'])
             self.main_window.show_all()
@@ -137,6 +140,7 @@ class Main():
             self.main_window.credentials_username.set_text(vpn_username)
             self.main_window.credentials_password.set_text(vpn_password)
 
+
         self.debug("Logged In")
 
     def save_config(self):
@@ -161,6 +165,7 @@ class Main():
             error_count += 1
         if (error_count > 0): return
 
+
         if (self.config['password_needed']):
             vpn_username = self.sym_encrypt(vpn_username)
             vpn_password = self.sym_encrypt(vpn_password)
@@ -168,9 +173,10 @@ class Main():
         self.config['vpn_username'] = vpn_username
         self.config['vpn_password'] = vpn_password
         self.save_config()
-
+        
         creds_updated = threading.Thread(target=self.credential_updated)
         creds_updated.start()
+
 
     def sym_encrypt(self, raw):
         private_key = hashlib.sha256(self.unhash_pass.encode("utf-8")).digest()
@@ -189,7 +195,6 @@ class Main():
     def hash_pass(self, password):
         return base64.b64encode(hashlib.sha3_512(password.encode("utf-8")).hexdigest().encode()).decode()
 
-
     def change_protocol(self, switch, is_tcp):
         if (is_tcp):
             self.config["connection_protocol"] = "tcp"
@@ -200,6 +205,7 @@ class Main():
             self.main_window.udp_label.set_markup("<b>UDP</b>")
             self.main_window.tcp_label.set_markup("TCP")
         self.save_config()
+
 
     def change_password_need(self, button):
         button.set_sensitive(False)
@@ -257,6 +263,50 @@ class Main():
         time.sleep(2)
         self.main_window.updated_vpn_credential_label.set_label("")
 
+    def change_theme(self, switch, current_theme):
+        style = Gtk.CssProvider()
+
+        if(current_theme):
+            style.load_from_path(self.folder_path + "style/style_darkmode.css")
+            self.config['theme'] = "dark"
+            self.main_window.light_label.set_markup("Light")
+            self.main_window.dark_label.set_markup("<b>Dark</b>")
+        else:
+            style.load_from_path(self.folder_path + "style/style_lightmode.css")
+            self.config['theme'] = "light"
+
+            self.main_window.light_label.set_markup("<b>Light</b>")
+            self.main_window.dark_label.set_markup("Dark")
+        
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            style,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+        self.save_config()
+
+
+    def change_killswitch(self, switch, killswitch_status):
+        if (killswitch_status):
+            self.config["killswitch"] = "on"
+            self.main_window.killswitch_off_label.set_markup("OFF")
+            self.main_window.killswitch_on_label.set_markup("<b>ON</b>")
+            if(self.vpn_command):
+                self.enable_killswitch()
+            success_popup = Popup("Killswitch activated", "The killswitch is now activated!\nThe current version of the killswitch can leak on port 1194")
+        else:
+            self.config["killswitch"] = "off"
+            self.main_window.killswitch_off_label.set_markup("<b>OFF</b>")
+            self.main_window.killswitch_on_label.set_markup("ON")       
+            self.disable_killswitch()         
+            success_popup = Popup("Killswitch deactivated", "The killswitch is now inactive!\nYour network traffic is now possible to leak")
+        self.save_config()
+
+    def credential_updated(self):
+        self.main_window.updated_vpn_credential_label.set_label("Credentials updated")
+        time.sleep(2)
+        self.main_window.updated_vpn_credential_label.set_label("")
+
     def switch_server(self, button):
         text = self.main_window.selected_label.get_text()
         if (text == "Nothing"): return False
@@ -275,7 +325,6 @@ class Main():
                 cred_file.write(self.sym_decrypt(self.config['vpn_username']) + "\n" + self.sym_decrypt(self.config['vpn_password']))
             else:
                 cred_file.write(self.config['vpn_username'] + "\n" + self.config['vpn_password'])
-
         subprocess.call(["cp", self.folder_path + "vpn_config_files/" + openvpn_config_file, self.folder_path + ".tmp_cfg_file"])
 
         try:
@@ -298,6 +347,10 @@ class Main():
             file[i] = "auth-user-pass "+ self.folder_path +".tmp_creds_file"
             cfg_file.writelines(file)
 
+        #disable the killswitch to connect to a new server
+        if(self.config["killswitch"] == "on"):
+            self.disable_killswitch()
+        
         self.vpn_command = subprocess.Popen(["openvpn", self.folder_path + ".tmp_cfg_file"], stdout=subprocess.PIPE)
 
         self.thread = threading.Thread(target=self.command_log)
@@ -324,6 +377,8 @@ class Main():
                 ip, err = p.communicate()
                 self.ip = ip.decode()
                 self.main_window.confirm_connection()
+                if(self.config["killswitch"] == "on"):
+                    self.enable_killswitch()
 
             with open(self.folder_path + "logs/openvpn-logs-" + str(date.today()) + ".txt", 'a') as logfile:
                 logfile.write(line + "\n")
@@ -332,12 +387,14 @@ class Main():
         self.debug('DISCONNECTED')
         self.vpn_command.terminate()
         self.thread.join()
+        self.disable_killswitch()
 
         self.ip = ""
         self.main_window.connected_to_label.set_label("Disconnected")
         self.main_window.ip_label.set_label("")
         self.main_window.disconnect_btn.set_sensitive(False)
         self.main_window.switch_server_btn.set_sensitive(True)
+
 
     def check_updates(self, button):
         subprocess.call(["wget", "https://account.surfshark.com/api/v1/server/configurations", "-O", self.folder_path + "vpn_config_files/conf.zip"])
@@ -361,10 +418,28 @@ class Main():
         if self.vpn_command and self.thread:
             self.vpn_command.terminate()
             self.thread.join()
+        self.disable_killswitch()
+        self.create_tray()
         Gtk.main_quit()
 
     def soft_quit_g(self, window):
         self.soft_quit()
 
+    def enable_killswitch(self):
+        #enable killswitch
+        enable_killswitch_command = "sudo ./enablekillswitch.sh"
+
+        command = enable_killswitch_command.split()
+        subprocess.run(command)
+
+    def disable_killswitch(self):
+        #restore old iptable rules
+        restore_iptables_command= "sudo ./restoreiptables.sh"
+        command = restore_iptables_command.split()
+        subprocess.run(command)
+
+    def create_tray(self):
+        #TODO
+        pass
 
 Main()

@@ -26,6 +26,7 @@ class MainWindow(Gtk.Window):
         # ================================
         # Servers
         # ================================
+
         servers_container = Gtk.VBox(spacing=0)
         self.tabs.append_page(servers_container)
         self.tabs.set_tab_label_text(servers_container, "Servers")
@@ -132,21 +133,21 @@ class MainWindow(Gtk.Window):
         vpn_settings_container.pack_start(credentials_v_container, False, False, 15)
 
         self.username_label = Gtk.Label()
-        self.username_label.set_markup("VPN Username")
+        self.username_label.set_markup("OpenVPN Username")
         credentials_v_container.pack_start(self.username_label, False, False, 10)
 
         self.credentials_username = Gtk.Entry()
-        self.credentials_username.set_placeholder_text("VPN Username")
+        self.credentials_username.set_placeholder_text("OpenVPN Username")
         credentials_v_container.pack_start(self.credentials_username, False, False, 0)
 
         credentials_v_container.pack_start(Gtk.Label(), False, False, 0)
 
         self.password_label = Gtk.Label()
-        self.password_label.set_markup("VPN Password")
+        self.password_label.set_markup("OpenVPN Password")
         credentials_v_container.pack_start(self.password_label, False, False, 10)
 
         self.credentials_password = Gtk.Entry()
-        self.credentials_password.set_placeholder_text("VPN Password")
+        self.credentials_password.set_placeholder_text("OpenVPN Password")
         credentials_v_container.pack_start(self.credentials_password, False, False, 0)
 
         self.save_credentials_button = Gtk.Button(label="Save")
@@ -159,6 +160,43 @@ class MainWindow(Gtk.Window):
         credentials_v_container.pack_start(self.updated_vpn_credential_label, False, False, 0)
 
         vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
+
+
+        self.check_for_updates_btn = Gtk.Button("Check for VPN updates")
+        self.check_for_updates_btn.connect("clicked", self.main.check_updates)
+        self.check_for_updates_btn.connect("enter-notify-event", self.hover)
+        self.check_for_updates_btn.connect("leave-notify-event", self.not_hover)
+        vpn_settings_container.pack_start(self.check_for_updates_btn, False, False, 15)
+
+        vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
+
+        #Theme
+        theme_container = Gtk.HBox()
+        theme_label = Gtk.Label("Theme")
+        theme_container.pack_start(theme_label, True, False, 3)
+
+        current_theme = True if main.config['theme'] == "light" else False
+        self.light_label = Gtk.Label()
+        self.light_label.set_markup("<b>Light</b>" if current_theme else "Light")
+        theme_container.pack_start(self.light_label, False, False, 0)
+
+        self.theme_switch = Gtk.Switch()
+        self.theme_switch.set_active(not current_theme)
+        self.theme_switch.connect("state-set", self.main.change_theme)
+        self.theme_switch.connect("enter-notify-event", self.hover)
+        self.theme_switch.connect("leave-notify-event", self.not_hover)
+        theme_container.pack_start(self.theme_switch, False, False, 20)
+
+        self.dark_label = Gtk.Label()
+        self.dark_label.set_markup("Dark" if current_theme else "<b>Dark</b>")
+        theme_container.pack_start(self.dark_label, False, False, 0)
+
+        vpn_settings_container.pack_start(theme_container, False, False, 15)
+        theme_container.pack_start(Gtk.Label(), True, False, 0)
+
+        vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
+
+
 
         protocol_container = Gtk.HBox()
         protocol_container.pack_start(Gtk.Label(), True, False, 0)
@@ -183,6 +221,35 @@ class MainWindow(Gtk.Window):
         protocol_container.pack_start(Gtk.Label(), True, False, 0)
 
         vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
+
+        #Killswitch
+        killswitch_container = Gtk.HBox()
+        killswitch_label = Gtk.Label("Disable/Enable the VPN Killswitch")
+        killswitch_container.pack_start(killswitch_label, True, False, 3)
+
+        killswitch_status = True if main.config["killswitch"] == "on" else False
+        self.killswitch_off_label = Gtk.Label()
+        self.killswitch_off_label.set_markup("OFF" if killswitch_status else "<b>OFF</b>")
+        killswitch_container.pack_start(self.killswitch_off_label, False, False, 0)
+
+        self.killswitch_switch = Gtk.Switch()
+        self.killswitch_switch.set_active(killswitch_status)
+        self.killswitch_switch.connect("state-set", self.main.change_killswitch)
+        self.killswitch_switch.connect("enter-notify-event", self.hover)
+        self.killswitch_switch.connect("leave-notify-event", self.not_hover)
+        killswitch_container.pack_start(self.killswitch_switch, False, False, 20)
+
+        self.killswitch_on_label = Gtk.Label()
+        self.killswitch_on_label.set_markup("<b>ON</b>" if killswitch_status else "ON")
+        killswitch_container.pack_start(self.killswitch_on_label, False, False, 0)
+
+        vpn_settings_container.pack_start(killswitch_container, False, False, 15)
+        killswitch_container.pack_start(Gtk.Label(), True, False, 0)
+
+        vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
+
+        self.updates_info = Gtk.Label()
+        vpn_settings_container.pack_start(self.updates_info, False, False, 0)
 
         self.enable_password_container = Gtk.VBox()
         if(not self.main.config['password_needed']):
@@ -209,6 +276,7 @@ class MainWindow(Gtk.Window):
         self.updates_info = Gtk.Label()
         vpn_settings_container.pack_start(self.updates_info, False, False, 0)
 
+
         self.check_for_updates_btn = Gtk.Button("Check for VPN updates")
         self.check_for_updates_btn.connect("clicked", self.main.check_updates)
         self.check_for_updates_btn.connect("enter-notify-event", self.hover)
@@ -216,6 +284,9 @@ class MainWindow(Gtk.Window):
         vpn_settings_container.pack_start(self.check_for_updates_btn, False, False, 15)
 
         vpn_settings_container.pack_start(Gtk.Separator(), False, False, 10)
+
+        vpn_settings_container.pack_start(Gtk.Label(), False, False, 13)
+
 
         update_pass_label = Gtk.Label('Change your password')
         update_pass_label.get_style_context().add_class('title')
@@ -254,7 +325,7 @@ class MainWindow(Gtk.Window):
         self.updated_password_label = Gtk.Label()
         vpn_settings_container.pack_start(self.updated_password_label, False, False, 5)
 
-        vpn_settings_container.pack_start(Gtk.Label(), False, False, 13)
+
 
     def hover(self, listbox_widget, crossing):
         self.get_window().set_cursor(Gdk.Cursor(Gdk.CursorType.HAND2))

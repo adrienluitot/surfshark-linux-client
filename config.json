@@ -1,1 +1,1 @@
-{"registered": false, "password_needed": true, "connection_protocol": "tcp", "config_md5": "216e60011d62aa5e01be16ebef093a78", "password": "", "vpn_username": "", "vpn_password": ""}
+{"registered": false, "theme": "dark", "connection_protocol": "udp", "killswitch": "off", "config_md5": "3fd85b786053314cbe309d07c9b36681", "password": "", "vpn_username": "", "vpn_password": "", "password_needed": true}
